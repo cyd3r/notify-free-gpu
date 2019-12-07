@@ -5,6 +5,8 @@ Get notifications via Telegram when your nvidia GPU is available again.
 + If memory usage of the GPU drops below 200MB, you will get a message "The GPU is available"
 + If memory usage of the GPU goes above 500MB, you will get a message "The GPU is in use"
 
+If you want to know the current memory usage of the GPU, send `/gpu` to the bot and it will respond you with a message like "9376MB is in use"
+
 ## Setup
 
 Run
