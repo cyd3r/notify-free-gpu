@@ -2,13 +2,11 @@
 
 import json
 import telegram
-from telegram.ext import Updater, InlineQueryHandler, CommandHandler
+from telegram.ext import Updater, CommandHandler
 from telegram.update import Update
 from telegram.ext.callbackcontext import CallbackContext
 import pynvml
 import time
-import multiprocessing
-
 
 class NotifyBot:
     def __init__(self):
@@ -23,7 +21,7 @@ class NotifyBot:
             print("You need to have a config.json file in this directory")
             exit(1)
 
-        self._last_free_mb = None
+        self._last_thresh = -1
 
         self._updater = Updater(token, use_context=True)
         dp = self._updater.dispatcher
@@ -43,7 +41,8 @@ class NotifyBot:
                 "to use the GPU and when it's available again")
 
     def _get_gpu(self, update: Update, context: CallbackContext):
-        update.message.reply_text("{:.0f}MB is in use".format(self._last_free_mb))
+        print(update.message.from_user.username, "requested gpu usage")
+        update.message.reply_text("{:.0f}MB is in use".format(self._last_thresh))
 
     def _poll_gpu(self, interval):
         pynvml.nvmlInit()
@@ -55,19 +54,18 @@ class NotifyBot:
             # print("Free memory:", info.free)
             # print("Used memory:", info.used)
 
-            free_mb = info.used / 1024 / 1024
-            if free_mb != self._last_free_mb:
-                if free_mb > 500:
-                    msg = "The GPU is in use"
-                elif free_mb < 200:
-                    msg = "The GPU is available"
-                self._last_free_mb = free_mb
+            used_mb = info.used / 1024 / 1024
+            thresh = int(used_mb / 500) * 500
+            if thresh != self._last_thresh:
+                self._last_thresh = thresh
+                msg = f"GPU usage is approximately {thresh} MB"
+                print(msg)
 
                 for chat_id in self._whitelist:
                     try:
                         self._updater.bot.send_message(chat_id, msg)
                     except telegram.error.Unauthorized:
-                        pass
+                        print("Unauthorized for", chat_id)
 
             time.sleep(interval)
 
