@@ -47,13 +47,9 @@ class NotifyBot:
     def _poll_gpu(self, interval):
         pynvml.nvmlInit()
         handle = pynvml.nvmlDeviceGetHandleByIndex(0)
-        info = pynvml.nvmlDeviceGetMemoryInfo(handle)
 
         while True:
-            # print("Total memory:", info.total)
-            # print("Free memory:", info.free)
-            # print("Used memory:", info.used)
-
+            info = pynvml.nvmlDeviceGetMemoryInfo(handle)
             used_mb = info.used / 1024 / 1024
             thresh = int(used_mb / 500) * 500
             if thresh != self._last_thresh:
