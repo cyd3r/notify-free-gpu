@@ -42,7 +42,11 @@ class NotifyBot:
 
     def _get_gpu(self, update: Update, context: CallbackContext):
         print(update.message.from_user.username, "requested gpu usage")
-        update.message.reply_text("{:.0f}MB is in use".format(self._last_thresh))
+        pynvml.nvmlInit()
+        handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+        info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        used_mb = info.used / 1024 / 1024
+        update.message.reply_text("{:.0f}MB is in use".format(used_mb))
 
     def _poll_gpu(self, interval):
         pynvml.nvmlInit()
