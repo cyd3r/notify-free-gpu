@@ -8,6 +8,22 @@ from telegram.ext.callbackcontext import CallbackContext
 import pynvml
 import time
 
+def pbar(current, maximum, size):
+    output = "|"
+    sep = round(current / maximum * size)
+    for i in range(sep + 1):
+        output += "#"
+    for i in range(sep + 1, size):
+        output += " "
+    output += "|"
+    return output
+
+def get_usage_msg(info):
+    return "GPU usage is {:.0f} MB\n{}".format(
+        info.used / 1024 / 1024,
+        pbar(info.used, info.total, 24)
+    )
+
 class NotifyBot:
     def __init__(self):
         super().__init__()
@@ -45,8 +61,7 @@ class NotifyBot:
         pynvml.nvmlInit()
         handle = pynvml.nvmlDeviceGetHandleByIndex(0)
         info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-        used_mb = info.used / 1024 / 1024
-        update.message.reply_text("{:.0f}MB is in use".format(used_mb))
+        update.message.reply_text(get_usage_msg(info))
 
     def _poll_gpu(self, interval):
         pynvml.nvmlInit()
@@ -58,7 +73,7 @@ class NotifyBot:
             thresh = int(used_mb / 500) * 500
             if thresh != self._last_thresh:
                 self._last_thresh = thresh
-                msg = f"GPU usage is approximately {thresh} MB"
+                msg = get_usage_msg(info)
                 print(msg)
 
                 for chat_id in self._whitelist:
