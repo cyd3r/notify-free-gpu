@@ -9,13 +9,13 @@ import pynvml
 import time
 
 def pbar(current, maximum, size):
-    output = "|"
+    output = "`|"
     sep = round(current / maximum * size)
     for i in range(sep + 1):
         output += "#"
     for i in range(sep + 1, size):
         output += " "
-    output += "|"
+    output += "|`"
     return output
 
 def get_usage_msg(info):
@@ -61,7 +61,7 @@ class NotifyBot:
         pynvml.nvmlInit()
         handle = pynvml.nvmlDeviceGetHandleByIndex(0)
         info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-        update.message.reply_text(get_usage_msg(info))
+        update.message.reply_text(get_usage_msg(info), parse_mode=telegram.ParseMode.MARKDOWN)
 
     def _poll_gpu(self, interval):
         pynvml.nvmlInit()
@@ -78,7 +78,7 @@ class NotifyBot:
 
                 for chat_id in self._whitelist:
                     try:
-                        self._updater.bot.send_message(chat_id, msg)
+                        self._updater.bot.send_message(chat_id, msg, parse_mode=telegram.ParseMode.MARKDOWN)
                     except telegram.error.Unauthorized:
                         print("Unauthorized for", chat_id)
 
